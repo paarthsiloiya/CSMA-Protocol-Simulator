@@ -1,0 +1,78 @@
+{% extends "base.html" %} {% block title %}CSMA/CD{% endblock %} {% block protocol_name %}CSMA / Collision Detection{% endblock %} {% block theory_content %}
+<div class="space-y-4 text-justify leading-relaxed">
+    <p><strong>Carrier Sense Multiple Access with Collision Detection (CSMA/CD)</strong> is an improvement over standard CSMA. It allows nodes to monitor the channel while they are transmitting to detect if a collision has occurred.</p>
+
+    <h4 class="font-bold text-base mt-2">Purpose & Problem Solved</h4>
+    <p>Basic CSMA protocols waste bandwidth by continuing to transmit a frame even after a collision has occurred. CSMA/CD aborts the transmission as soon as a collision is detected, freeing the channel.</p>
+
+    <h4 class="font-bold text-base mt-2">Working Principle</h4>
+    <ol class="list-decimal pl-5 space-y-1 mt-1">
+        <li><strong>Sense the Channel:</strong> Node monitors the medium. Wait if busy, transmit if idle.</li>
+        <li><strong>Detect Collision:</strong> While transmitting, the node continuously monitors the channel for signal energy spikes indicating a collision.</li>
+        <li><strong>Abort and Jam:</strong> If a collision is detected, the node immediately stops transmission and broadcasts a brief <em>jamming signal</em> to ensure all nodes recognize the collision.</li>
+        <li><strong>Backoff & Retry:</strong> The node enters an exponential backoff phase, selecting a random time to wait before sensing the channel again.</li>
+    </ol>
+
+    <h4 class="font-bold text-base mt-2">Strengths and Limitations</h4>
+    <p>
+        <strong>Strengths:</strong> Minimizes the bandwidth wasted by collisions. Very efficient in lightly loaded networks, hence its deployment in classic wired Ethernet (IEEE 802.3).<br />
+        <strong>Limitations:</strong> Ineffective in wireless environments, where signal attenuation prevents accurate collision detection at the transmitter (the "hidden node" problem). Performance degrades significantly as network load increases.
+    </p>
+
+    <h4 class="font-bold text-base mt-2">Comparison</h4>
+    <p>Compared to basic CSMA, it actively <em>detects</em> collisions and acts upon them. Compared to CSMA/CA, it relies on recovering from collisions rather than actively avoiding them entirely.</p>
+</div>
+{% endblock %} {% block flowchart %}
+<div class="flex flex-col items-center relative text-sm w-full font-mono">
+    <div id="fc-start" class="flow-box bg-slate-100 rounded-full font-bold">START</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-k0" class="flow-box">K = 0</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-apply_persistence" class="flow-box">Apply persistence method<br />(1-persistent / non-persistent / p-persistent)</div>
+    <div class="h-4 w-px bg-border"></div>
+
+    <div class="w-full flex justify-center relative">
+        <div id="fc-sense" class="flow-box w-2/3">IF channel is idle THEN<br />Transmit frame<br />ELSE<br />Continue sensing</div>
+    </div>
+    <div class="h-4 w-px bg-border"></div>
+
+    <div id="fc-transmit" class="flow-box bg-blue-50 border-blue-200">WHILE transmitting</div>
+    <div class="h-4 w-px bg-border"></div>
+
+    <div id="fc-collision" class="flow-box border-warning bg-yellow-50">IF collision detected?</div>
+
+    <div class="flex w-full mt-2">
+        <div class="w-1/2 flex flex-col items-center border-r border-border pr-2">
+            <div class="text-xs font-bold text-slate-500 mb-1">YES</div>
+            <div id="fc-jamming" class="flow-box text-xs">Send jamming signal<br />K = K + 1</div>
+            <div class="h-4 w-px bg-border"></div>
+            <div id="fc-check_kmax" class="flow-box text-xs border-warning bg-yellow-50">IF K > K_max?</div>
+            <div class="flex w-full mt-2">
+                <div class="w-1/2 flex flex-col items-center">
+                    <div class="text-xs font-bold text-slate-500 mb-1">YES</div>
+                    <div id="fc-abort" class="flow-box bg-red-100 border-red-300 rounded-full text-xs font-bold">ABORT</div>
+                </div>
+                <div class="w-1/2 flex flex-col items-center border-l border-border pl-2">
+                    <div class="text-xs font-bold text-slate-500 mb-1">NO</div>
+                    <div id="fc-random_r" class="flow-box text-xs">Choose random R<br />[0, 2^K - 1]</div>
+                    <div class="h-4 w-px bg-border"></div>
+                    <div id="fc-wait_tb" class="flow-box text-xs">Compute T_B = R × T_p<br />Wait T_B</div>
+                    <div class="h-4 w-px bg-border"></div>
+                    <div class="text-xs italic text-slate-400">Go back to sensing</div>
+                </div>
+            </div>
+        </div>
+        <div class="w-1/2 flex flex-col items-center pl-2">
+            <div class="text-xs font-bold text-slate-500 mb-1">NO</div>
+            <div id="fc-success" class="flow-box bg-green-100 border-green-300 rounded-full font-bold">SUCCESS</div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+    // Initialize CSMA/CD Simulation logic here
+    document.addEventListener("DOMContentLoaded", () => {
+        initSimulation("csmacd");
+    });
+</script>
+{% endblock %}

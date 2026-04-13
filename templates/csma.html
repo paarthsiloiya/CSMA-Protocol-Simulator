@@ -1,0 +1,80 @@
+{% extends "base.html" %} {% block title %}CSMA{% endblock %} {% block protocol_name %}Carrier Sense Multiple Access (CSMA){% endblock %} {% block theory_content %}
+<div class="space-y-4 text-justify leading-relaxed">
+    <p><strong>Carrier Sense Multiple Access (CSMA)</strong> is a Media Access Control (MAC) protocol used to control how data is transmitted across a shared network medium. It improves upon simple ALOHA protocols by requiring nodes to "listen before they talk."</p>
+
+    <h4 class="font-bold text-base mt-2">Purpose & Problem Solved</h4>
+    <p>In shared mediums, if two nodes transmit simultaneously, their signals corrupt each other, causing a <em>collision</em>. Pure ALOHA suffers from frequent collisions. CSMA prevents many collisions by sensing the channel before initiating any transmission.</p>
+
+    <h4 class="font-bold text-base mt-2">Working Principle</h4>
+    <ol class="list-decimal pl-5 space-y-1 mt-1">
+        <li><strong>Sense the Channel:</strong> A node with data to send checks if any other node is currently transmitting.</li>
+        <li><strong>If Idle:</strong> The node proceeds to transmit the packet.</li>
+        <li>
+            <strong>If Busy:</strong> The node waits (backs off) according to a persistence strategy:
+            <ul class="list-disc pl-5 mt-1 text-xs">
+                <li><em>1-persistent:</em> Transmit immediately once idle.</li>
+                <li><em>Non-persistent:</em> Wait a random time before sensing again.</li>
+                <li><em>p-persistent:</em> When idle, transmit with probability <em>p</em>.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4 class="font-bold text-base mt-2">Strengths and Limitations</h4>
+    <p>
+        <strong>Strengths:</strong> Simple implementation and significantly reduces collisions compared to ALOHA.<br />
+        <strong>Limitations:</strong> Collisions can still occur if two nodes sense the channel as idle simultaneously due to propagation delay. Furthermore, basic CSMA has no mechanism to halt a transmission once a collision happens, leading to wasted bandwidth as the entire corrupted frame is
+        sent.
+    </p>
+</div>
+{% endblock %} {% block flowchart %}
+<div class="flex flex-col items-center relative text-sm w-full font-mono">
+    <div id="fc-start" class="flow-box bg-slate-100 rounded-full font-bold">START</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-sense" class="flow-box border-warning bg-yellow-50">Sense the channel</div>
+    <div class="h-4 w-px bg-border"></div>
+
+    <div class="flex w-full justify-between items-start mt-2">
+        <div class="flex flex-col items-center w-1/2 px-2 border-r border-border">
+            <div id="fc-idle" class="flow-box border-success bg-green-50 mb-2">IF channel is idle THEN</div>
+            <div id="fc-idle_persist" class="flow-box text-xs text-left mb-2 text-gray-700">
+                <strong>Apply persistence rule:</strong><br />
+                <div class="h-1"></div>
+                - <i>1-persistent</i>: Transmit<br />
+                - <i>non-persistent</i>: Transmit<br />
+                - <i>p-persistent</i>: Send with prob p, else wait
+            </div>
+        </div>
+        <div class="flex flex-col items-center w-1/2 px-2">
+            <div id="fc-busy" class="flow-box border-danger bg-red-50 mb-2">ELSE (channel is busy)</div>
+            <div id="fc-busy_persist" class="flow-box text-xs text-left mb-2 text-gray-700">
+                <strong>Apply persistence rule:</strong><br />
+                <div class="h-1"></div>
+                - <i>1-persistent</i>: Continue sense<br />
+                - <i>non-persistent</i>: Wait random<br />
+                - <i>p-persistent</i>: Continue sense
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full flex justify-center"><div class="h-4 w-px bg-border"></div></div>
+
+    <div id="fc-transmit" class="flow-box bg-blue-50 border-blue-200 font-bold mb-2 w-full max-w-sm">AFTER transmission:</div>
+    <div class="h-4 w-px bg-border"></div>
+
+    <div class="flex w-full justify-between items-start">
+        <div class="flex flex-col items-center w-1/2 px-2 border-r border-border">
+            <div id="fc-collision" class="flow-box border-danger bg-red-50 text-xs">IF collision occurs THEN<br />Transmission fails<br />Retry</div>
+        </div>
+        <div class="flex flex-col items-center w-1/2 px-2">
+            <div id="fc-success" class="flow-box bg-green-100 border-green-300 rounded-full text-xs font-bold mt-2">ELSE SUCCESS</div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+    // Initialize CSMA Simulation logic here
+    document.addEventListener("DOMContentLoaded", () => {
+        initSimulation("csma");
+    });
+</script>
+{% endblock %}

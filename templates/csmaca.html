@@ -1,0 +1,84 @@
+{% extends "base.html" %} {% block title %}CSMA/CA{% endblock %} {% block protocol_name %}CSMA / Collision Avoidance{% endblock %} {% block theory_content %}
+<div class="space-y-4 text-justify leading-relaxed">
+    <p><strong>Carrier Sense Multiple Access with Collision Avoidance (CSMA/CA)</strong> is a variation of CSMA used extensively in wireless networks, such as Wi-Fi (IEEE 802.11).</p>
+
+    <h4 class="font-bold text-base mt-2">Purpose & Problem Solved</h4>
+    <p>
+        In wireless environments, detecting collisions while transmitting (as CSMA/CD does) is difficult due to rapid signal attenuation—a transmitter's own signal drowns out incoming signals. Because of the "hidden terminal" problem, nodes might not hear each other. Thus, CSMA/CA aims to
+        <em>avoid</em> collisions proactively instead of relying on post-collision detection.
+    </p>
+
+    <h4 class="font-bold text-base mt-2">Working Principle</h4>
+    <ol class="list-decimal pl-5 space-y-1 mt-1">
+        <li><strong>Listen First:</strong> If the channel is idle for a required period (DIFS / IFS), the node prepares to transmit.</li>
+        <li><strong>Contention Window:</strong> If the channel is busy, the node defers its transmission. It selects a random backoff slot within a contention window.</li>
+        <li><strong>Countdown:</strong> The backoff timer counts down only while the channel is sensed idle.</li>
+        <li><strong>Transmit:</strong> Once the timer reaches zero, the frame is transmitted.</li>
+        <li><strong>Acknowledge (ACK):</strong> Because collisions can't be reliably detected by the transmitter, the receiver sends a short ACK frame. If the transmitter receives no ACK, it assumes a collision occurred and retries with a larger backoff window.</li>
+    </ol>
+
+    <h4 class="font-bold text-base mt-2">Strengths and Limitations</h4>
+    <p>
+        <strong>Strengths:</strong> Solves the collision detection impossibility over wireless media. Significantly lowers collision probability using RTS/CTS (Request to Send/Clear to Send) extensions. Essential for wireless network operation.<br />
+        <strong>Limitations:</strong> Overhead from inter-frame spaces (IFS), backoff intervals, and ACKs reduces overall wireless throughput efficiency.
+    </p>
+
+    <h4 class="font-bold text-base mt-2">Comparison</h4>
+    <p>Unlike CSMA/CD, which "hears" the collision, CSMA/CA infers success solely via the arrival of an acknowledgment. It mandates random waiting periods even when the channel might be idle, prioritizing collision avoidance over raw speed.</p>
+</div>
+{% endblock %} {% block flowchart %}
+<div class="flex flex-col items-center relative text-sm w-full font-mono">
+    <div id="fc-start" class="flow-box bg-slate-100 rounded-full font-bold">START</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-k0" class="flow-box">K = 0</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div class="w-full flex justify-center relative">
+        <div id="fc-sense" class="flow-box w-2/3">Sense channel<br /><br />IF channel NOT idle:<br />Continue sensing (LOOP)</div>
+    </div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-wait_ifs" class="flow-box">Wait for IFS<br />(Interframe Space)</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div class="w-full flex justify-center relative">
+        <div id="fc-sense2" class="flow-box border-warning bg-yellow-50 w-2/3">Sense channel again<br /><br />IF channel NOT idle:<br />Go back to sensing</div>
+    </div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-random" class="flow-box">Choose random R<br />[0, 2^K - 1]</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-wait_r" class="flow-box">Wait for R time slots</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-send" class="flow-box bg-blue-50 border-blue-200">Send frame</div>
+    <div class="h-4 w-px bg-border"></div>
+    <div id="fc-wait_ack" class="flow-box">Wait for ACK<br />(timeout period)</div>
+    <div class="h-4 w-px bg-border"></div>
+
+    <div class="flex w-full mt-2 justify-center gap-8">
+        <div class="flex flex-col items-center w-1/2">
+            <div class="text-xs font-bold text-slate-500 mb-1">ACK received? YES</div>
+            <div id="fc-success" class="flow-box bg-green-100 border-green-300 rounded-full font-bold">SUCCESS</div>
+        </div>
+        <div class="flex flex-col items-center w-1/2">
+            <div class="text-xs font-bold text-slate-500 mb-1">ACK received? NO</div>
+            <div id="fc-kplus" class="flow-box text-xs">K = K + 1</div>
+            <div class="h-4 w-px bg-border"></div>
+            <div id="fc-kmax" class="flow-box text-xs border-warning bg-yellow-50">IF K > K_max?</div>
+            <div class="flex w-full mt-2 gap-2">
+                <div class="w-1/2 flex flex-col items-center">
+                    <div class="text-[10px] font-bold text-slate-500 mb-1">YES</div>
+                    <div id="fc-abort" class="flow-box bg-red-100 border-red-300 rounded-full text-[10px] font-bold w-full">ABORT</div>
+                </div>
+                <div class="w-1/2 flex flex-col items-center">
+                    <div class="text-[10px] font-bold text-slate-500 mb-1">NO</div>
+                    <div id="fc-retry" class="flow-box text-[10px] w-full">Retry<br />from sensing</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+    // Initialize CSMA/CA Simulation logic here
+    document.addEventListener("DOMContentLoaded", () => {
+        initSimulation("csmaca");
+    });
+</script>
+{% endblock %}
