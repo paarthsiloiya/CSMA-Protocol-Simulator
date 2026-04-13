@@ -27,47 +27,11 @@
     </p>
 </div>
 {% endblock %} {% block flowchart %}
-<div class="flex flex-col items-center relative text-sm w-full font-mono">
-    <div id="fc-start" class="flow-box bg-slate-100 rounded-full font-bold">START</div>
-    <div class="h-4 w-px bg-border"></div>
-    <div id="fc-sense" class="flow-box border-warning bg-yellow-50">Sense the channel</div>
-    <div class="h-4 w-px bg-border"></div>
-
-    <div class="flex w-full justify-between items-start mt-2">
-        <div class="flex flex-col items-center w-1/2 px-2 border-r border-border">
-            <div id="fc-idle" class="flow-box border-success bg-green-50 mb-2">IF channel is idle THEN</div>
-            <div id="fc-idle_persist" class="flow-box text-xs text-left mb-2 text-gray-700">
-                <strong>Apply persistence rule:</strong><br />
-                <div class="h-1"></div>
-                - <i>1-persistent</i>: Transmit<br />
-                - <i>non-persistent</i>: Transmit<br />
-                - <i>p-persistent</i>: Send with prob p, else wait
-            </div>
-        </div>
-        <div class="flex flex-col items-center w-1/2 px-2">
-            <div id="fc-busy" class="flow-box border-danger bg-red-50 mb-2">ELSE (channel is busy)</div>
-            <div id="fc-busy_persist" class="flow-box text-xs text-left mb-2 text-gray-700">
-                <strong>Apply persistence rule:</strong><br />
-                <div class="h-1"></div>
-                - <i>1-persistent</i>: Continue sense<br />
-                - <i>non-persistent</i>: Wait random<br />
-                - <i>p-persistent</i>: Continue sense
-            </div>
-        </div>
-    </div>
-
-    <div class="w-full flex justify-center"><div class="h-4 w-px bg-border"></div></div>
-
-    <div id="fc-transmit" class="flow-box bg-blue-50 border-blue-200 font-bold mb-2 w-full max-w-sm">AFTER transmission:</div>
-    <div class="h-4 w-px bg-border"></div>
-
-    <div class="flex w-full justify-between items-start">
-        <div class="flex flex-col items-center w-1/2 px-2 border-r border-border">
-            <div id="fc-collision" class="flow-box border-danger bg-red-50 text-xs">IF collision occurs THEN<br />Transmission fails<br />Retry</div>
-        </div>
-        <div class="flex flex-col items-center w-1/2 px-2">
-            <div id="fc-success" class="flow-box bg-green-100 border-green-300 rounded-full text-xs font-bold mt-2">ELSE SUCCESS</div>
-        </div>
+<div class="w-full relative bg-white pb-10" style="min-height: 500px">
+    <div class="mermaid text-center">
+        flowchart TD start(["Start"]):::step-start --> sense["Sense the<br />channel"]:::step-sense sense --> decision{% raw %}{{"Channel status?"}}{% endraw %}:::step-status decision -- "Idle" --> idle_persist["IF idle THEN<br />Apply persistence rule"]:::step-idle_persist idle_persist -->
+        transmit["AFTER transmission"]:::step-transmit decision -- "Busy" --> busy_persist["ELSE busy<br />Apply persistence rule"]:::step-busy_persist busy_persist -.-> sense transmit --> collision{% raw %}{{"IF collision occurs THEN"}}{% endraw %}:::step-collision collision -- "Yes" -->
+        retry["Retry"] retry -.-> sense collision -- "No" --> success(["Success"]):::step-success
     </div>
 </div>
 {% endblock %} {% block scripts %}

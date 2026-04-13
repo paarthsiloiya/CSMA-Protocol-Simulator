@@ -6,6 +6,7 @@
         <title>Network Protocol Simulator - {% block title %}{% endblock %}</title>
         <!-- Tailwind CSS CDN -->
         <script src="https://cdn.tailwindcss.com"></script>
+
         <script>
             tailwind.config = {
                 theme: {
@@ -29,6 +30,7 @@
                 },
             };
         </script>
+
         <!-- Custom flat styles for elements not directly handled by Tailwind utility classes -->
         <style>
             body {
@@ -146,7 +148,7 @@
             }
 
             .flow-box {
-                border: 2px solid theme("colors.border");
+                border: 2px solid theme("colors.textMain");
                 background-color: theme("colors.surface");
                 padding: 0.75rem;
                 text-align: center;
@@ -155,13 +157,89 @@
                 font-size: 0.875rem;
                 position: relative;
                 z-index: 2;
-                border-radius: 4px;
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
             }
             .flow-active {
                 border-color: theme("colors.primary") !important;
                 background-color: #eff6ff !important;
-                box-shadow: 0 0 0 2px theme("colors.primary");
+                box-shadow:
+                    0 0 0 2px theme("colors.primary"),
+                    2px 2px 5px rgba(0, 0, 0, 0.15);
                 font-weight: bold;
+                transition: all 0.3s;
+                transform: scale(1.02);
+            }
+
+            .shape-oval {
+                border-radius: 9999px;
+                background-color: theme("colors.bgLight");
+            }
+            .shape-rect {
+                border-radius: 0;
+            }
+            .shape-hex {
+                clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+                background-color: #fde047; /* yellow-300 */
+                border: none;
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+            /* Hexagon border hack */
+            .shape-hex::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+                background: theme("colors.textMain");
+                z-index: -1;
+                margin: -2px;
+            }
+
+            .shape-blue {
+                background-color: #bae6fd; /* blue-200 */
+            }
+            .shape-green {
+                background-color: #bef264; /* lime-300 */
+            }
+            .arrow-down {
+                width: 2px;
+                height: 1.5rem;
+                background-color: theme("colors.textMain");
+                margin: 0 auto;
+                position: relative;
+            }
+            .arrow-down::after {
+                content: "";
+                position: absolute;
+                bottom: -4px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-width: 6px 5px 0 5px;
+                border-color: theme("colors.textMain") transparent transparent transparent;
+            }
+            .arrow-up {
+                width: 2px;
+                height: 1.5rem;
+                background-color: theme("colors.textMain");
+                margin: 0 auto;
+                position: relative;
+            }
+            .arrow-up::before {
+                content: "";
+                position: absolute;
+                top: -4px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-width: 0 5px 6px 5px;
+                border-color: transparent transparent theme("colors.textMain") transparent;
+            }
+
+            .flow-active-svg rect,
+            .flow-active-svg polygon,
+            .flow-active-svg path.label-container {
+                fill: #eff6ff !important;
+                stroke: theme("colors.primary") !important;
+                stroke-width: 3px !important;
                 transition: all 0.3s;
             }
 
@@ -174,7 +252,7 @@
                 margin: 60px 0;
             }
 
-            .node {
+            .bus-line .node {
                 position: absolute;
                 width: 40px;
                 height: 40px;
@@ -188,7 +266,7 @@
                 transform: translateX(-50%);
             }
 
-            .node::after {
+            .bus-line .node::after {
                 content: "";
                 position: absolute;
                 width: 2px;
@@ -199,7 +277,7 @@
                 transform: translateX(-50%);
             }
 
-            .packet {
+            .bus-line .packet {
                 position: absolute;
                 height: 20px;
                 width: 40px;
@@ -215,7 +293,7 @@
                     right 0.5s linear;
             }
 
-            .collision-marker {
+            .bus-line .collision-marker {
                 position: absolute;
                 width: 30px;
                 height: 30px;
@@ -236,6 +314,42 @@
                 100% {
                     transform: translateX(-50%) scale(1);
                 }
+            }
+
+            /* Reset Tailwind SVG interference for Mermaid */
+            .mermaid svg {
+                max-width: 100%;
+                height: auto;
+            }
+            .mermaid *,
+            .mermaid *::before,
+            .mermaid *::after {
+                border-width: unset;
+                border-style: unset;
+                border-color: unset;
+                box-sizing: content-box;
+            }
+            .mermaid text {
+                font-family: "Inter", system-ui, sans-serif !important;
+            }
+            .flow-active-svg rect,
+            .flow-active-svg circle,
+            .flow-active-svg polygon,
+            .flow-active-svg path.label-container {
+                stroke: #2563eb !important;
+                stroke-width: 4px !important;
+                fill: #eff6ff !important;
+                filter: drop-shadow(0px 0px 8px #2563eb) !important;
+            }
+
+            /* Reduce line spacing inside flowchart nodes */
+            .mermaid .nodeLabel {
+                line-height: 1.15 !important;
+            }
+            .mermaid .nodeLabel p {
+                margin: 0 !important;
+                padding-top: 2px !important;
+                padding-bottom: 2px !important;
             }
         </style>
         {% block head %}{% endblock %}
@@ -317,7 +431,10 @@
                                         <div class="px-4 py-1 rounded-full text-sm font-medium peer-checked:bg-primary peer-checked:text-white hover:bg-gray-200 transition-colors">Node D</div>
                                     </label>
                                 </div>
-                                <button id="btn-send-a" class="btn btn-primary ml-auto shadow-sm">Send Packet</button>
+                                <div class="flex flex-col items-end ml-auto">
+                                    <button id="btn-send-a" class="btn btn-primary shadow-sm w-full">Send Packet</button>
+                                    <div id="node-a-backoff-timer" class="text-xs text-danger font-bold mt-1 hidden text-right">Backoff: <span>0</span> ticks</div>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -368,6 +485,23 @@
 
         <!-- Scripts -->
         <script src="{{ url_for('static', filename='js/simulator.js') }}"></script>
+
+        <!-- Mermaid for scalable/clean flowcharts -->
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+        <script>
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: "base",
+                themeVariables: {
+                    primaryColor: "#F8FAFC",
+                    primaryTextColor: "#0F172A",
+                    primaryBorderColor: "#0F172A",
+                    lineColor: "#0F172A",
+                },
+                securityLevel: "loose",
+            });
+        </script>
+
         {% block scripts %}{% endblock %}
     </body>
 </html>

@@ -39,11 +39,22 @@ const updateMetrics = () => {
 };
 
 const highlightFlowchart = (stepId) => {
+    // Old HTML boxes
     document.querySelectorAll('.flow-box').forEach(el => el.classList.remove('flow-active'));
     const target = document.getElementById('fc-' + stepId);
     if (target) {
         target.classList.add('flow-active');
     }
+
+    // Mermaid SVG highlighting
+    document.querySelectorAll('.flow-active-svg').forEach(el => {
+        el.classList.remove('flow-active-svg');
+    });
+    
+    // Mermaid classes will be like class="node step-sense default"
+    document.querySelectorAll('.step-' + stepId).forEach(el => {
+        el.classList.add('flow-active-svg');
+    });
 };
 
 const updateChannelUI = () => {
@@ -204,17 +215,27 @@ const updateNodeStatus = () => {
             const btnSendA = document.getElementById('btn-send-a');
             if (btnSendA) {
                 if (node.state === 'idle') {
-                    btnSendA.disabled = false;
-                    btnSendA.innerText = "Send Packet";
-                    btnSendA.classList.remove('opacity-50', 'cursor-not-allowed');
-                } else {
-                    btnSendA.disabled = true;
-                    btnSendA.innerText = "Pending...";
-                    btnSendA.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-            }
-        }
-    });
+                   btnSendA.disabled = false;
+                   btnSendA.innerText = "Send Packet";
+                   btnSendA.classList.remove('opacity-50', 'cursor-not-allowed');
+               } else {
+                   btnSendA.disabled = true;
+                   btnSendA.innerText = "Pending...";
+                   btnSendA.classList.add('opacity-50', 'cursor-not-allowed');
+               }
+               
+               const backoffUI = document.getElementById('node-a-backoff-timer');
+               if (backoffUI) {
+                   if (node.state === 'backoff' || node.state === 'wait_ifs' || node.state === 'wait_r') {
+                       backoffUI.classList.remove('hidden');
+                       backoffUI.innerHTML = `Wait: <span>${node.timeout}</span> ticks`;
+                   } else {
+                       backoffUI.classList.add('hidden');
+                   }
+               }
+           }
+       }
+   });
 };
 
 /* Protocol Logic */

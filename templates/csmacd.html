@@ -23,49 +23,12 @@
     <p>Compared to basic CSMA, it actively <em>detects</em> collisions and acts upon them. Compared to CSMA/CA, it relies on recovering from collisions rather than actively avoiding them entirely.</p>
 </div>
 {% endblock %} {% block flowchart %}
-<div class="flex flex-col items-center relative text-sm w-full font-mono">
-    <div id="fc-start" class="flow-box bg-slate-100 rounded-full font-bold">START</div>
-    <div class="h-4 w-px bg-border"></div>
-    <div id="fc-k0" class="flow-box">K = 0</div>
-    <div class="h-4 w-px bg-border"></div>
-    <div id="fc-apply_persistence" class="flow-box">Apply persistence method<br />(1-persistent / non-persistent / p-persistent)</div>
-    <div class="h-4 w-px bg-border"></div>
-
-    <div class="w-full flex justify-center relative">
-        <div id="fc-sense" class="flow-box w-2/3">IF channel is idle THEN<br />Transmit frame<br />ELSE<br />Continue sensing</div>
-    </div>
-    <div class="h-4 w-px bg-border"></div>
-
-    <div id="fc-transmit" class="flow-box bg-blue-50 border-blue-200">WHILE transmitting</div>
-    <div class="h-4 w-px bg-border"></div>
-
-    <div id="fc-collision" class="flow-box border-warning bg-yellow-50">IF collision detected?</div>
-
-    <div class="flex w-full mt-2">
-        <div class="w-1/2 flex flex-col items-center border-r border-border pr-2">
-            <div class="text-xs font-bold text-slate-500 mb-1">YES</div>
-            <div id="fc-jamming" class="flow-box text-xs">Send jamming signal<br />K = K + 1</div>
-            <div class="h-4 w-px bg-border"></div>
-            <div id="fc-check_kmax" class="flow-box text-xs border-warning bg-yellow-50">IF K > K_max?</div>
-            <div class="flex w-full mt-2">
-                <div class="w-1/2 flex flex-col items-center">
-                    <div class="text-xs font-bold text-slate-500 mb-1">YES</div>
-                    <div id="fc-abort" class="flow-box bg-red-100 border-red-300 rounded-full text-xs font-bold">ABORT</div>
-                </div>
-                <div class="w-1/2 flex flex-col items-center border-l border-border pl-2">
-                    <div class="text-xs font-bold text-slate-500 mb-1">NO</div>
-                    <div id="fc-random_r" class="flow-box text-xs">Choose random R<br />[0, 2^K - 1]</div>
-                    <div class="h-4 w-px bg-border"></div>
-                    <div id="fc-wait_tb" class="flow-box text-xs">Compute T_B = R × T_p<br />Wait T_B</div>
-                    <div class="h-4 w-px bg-border"></div>
-                    <div class="text-xs italic text-slate-400">Go back to sensing</div>
-                </div>
-            </div>
-        </div>
-        <div class="w-1/2 flex flex-col items-center pl-2">
-            <div class="text-xs font-bold text-slate-500 mb-1">NO</div>
-            <div id="fc-success" class="flow-box bg-green-100 border-green-300 rounded-full font-bold">SUCCESS</div>
-        </div>
+<div class="w-full relative bg-white pb-10" style="min-height: 600px">
+    <div class="mermaid text-center">
+        flowchart TD start(["Start"]):::step-start --> k0["K = 0"]:::step-k0 k0 --> apply_persistence["Apply one of the<br />persistence methods<br />(1-persistent, nonpersistent,<br />or p-persistent)"]:::step-apply_persistence apply_persistence --> sense{% raw %}{{"(Transmission done) or
+        (Collision detected)"}}{% endraw %}:::step-sense sense -- "No" --> transmit["Transmit<br />and receive"]:::step-transmit transmit --> sense sense -- "Yes" --> collision{% raw %}{{"Collision detected?"}}{% endraw %}:::step-collision collision -- "Yes" --> jamming["Send a jamming
+        signal"]:::step-jamming jamming --> kplus["K = K + 1"] kplus --> check_kmax{% raw %}{{"K > Kmax"}}{% endraw %}:::step-check_kmax check_kmax -- "Yes" --> abort(["Abort"]):::step-abort check_kmax -- "No" --> random_r["Choose a random number R<br />between 0 and 2^K - 1"]:::step-random_r
+        random_r --> wait_tb["Wait TB time<br />(TB = R * Tp or R * Tfr)"]:::step-wait_tb wait_tb --> apply_persistence collision -- "No" --> success(["Success"]):::step-success
     </div>
 </div>
 {% endblock %} {% block scripts %}
