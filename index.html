@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Network Protocol Simulator — CSMA / CD / CA</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="css/styles.css" />
+    </head>
+    <body>
+        <!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+        <header class="site-header">
+            <div class="header-inner">
+                <div class="header-brand">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" class="brand-icon">
+                        <circle cx="14" cy="14" r="13" stroke="#eb5e28" stroke-width="1.5" />
+                        <circle cx="14" cy="14" r="4" fill="#eb5e28" />
+                        <line x1="14" y1="1" x2="14" y2="7" stroke="#eb5e28" stroke-width="1.5" />
+                        <line x1="14" y1="21" x2="14" y2="27" stroke="#eb5e28" stroke-width="1.5" />
+                        <line x1="1" y1="14" x2="7" y2="14" stroke="#eb5e28" stroke-width="1.5" />
+                        <line x1="21" y1="14" x2="27" y2="14" stroke="#eb5e28" stroke-width="1.5" />
+                    </svg>
+                    <span class="brand-name">NetProto<span class="accent">Sim</span></span>
+                </div>
+                <nav class="header-nav">
+                    <button class="nav-tab active" data-protocol="csma">CSMA</button>
+                    <button class="nav-tab" data-protocol="csmacd">CSMA/CD</button>
+                    <button class="nav-tab" data-protocol="csmaca">CSMA/CA</button>
+                </nav>
+                <div class="header-meta">
+                    <span class="meta-label">MAC Layer Protocols</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ══════════════════════════════════════════
+     THEORY SECTION
+══════════════════════════════════════════ -->
+        <section class="theory-section" id="theory-section">
+            <!-- CSMA Theory -->
+            <div class="theory-content active" id="theory-csma">
+                <div class="theory-inner">
+                    <div class="theory-title-block">
+                        <div class="theory-badge">Protocol 01</div>
+                        <h1 class="theory-h1">CSMA <span class="dim">— Carrier Sense Multiple Access</span></h1>
+                    </div>
+                    <div class="theory-cols">
+                        <div class="theory-col">
+                            <p class="theory-p">
+                                CSMA is a Media Access Control (MAC) protocol in which a node verifies the absence of other traffic before transmitting on a shared transmission medium. A sender first listens to the channel; only if it finds the channel idle does it proceed to transmit.
+                            </p>
+                            <p class="theory-p">The <strong>1-persistent</strong> variant transmits with probability 1 once the channel is sensed idle — the simplest approach but prone to collisions when multiple stations wait for a busy channel to clear.</p>
+                        </div>
+                        <div class="theory-col">
+                            <div class="theory-facts">
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Sense before transmit</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>No collision detection</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Retry on failure</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Used in early Ethernet</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSMA/CD Theory -->
+            <div class="theory-content" id="theory-csmacd">
+                <div class="theory-inner">
+                    <div class="theory-title-block">
+                        <div class="theory-badge">Protocol 02</div>
+                        <h1 class="theory-h1">CSMA/CD <span class="dim">— Collision Detection</span></h1>
+                    </div>
+                    <div class="theory-cols">
+                        <div class="theory-col">
+                            <p class="theory-p">CSMA/CD extends CSMA by adding the ability to detect collisions during transmission. When a collision is detected, a jamming signal is sent, transmission is aborted, and each station waits a random backoff time before retrying.</p>
+                            <p class="theory-p">The <strong>binary exponential backoff</strong> algorithm doubles the contention window after each collision (K = 0..15), dramatically reducing repeat collisions. Maximum retries K<sub>max</sub> = 15; beyond that, the frame is aborted.</p>
+                        </div>
+                        <div class="theory-col">
+                            <div class="theory-facts">
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Detect collision mid-transmission</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Jam signal broadcast</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Binary exponential backoff</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>IEEE 802.3 (Classic Ethernet)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSMA/CA Theory -->
+            <div class="theory-content" id="theory-csmaca">
+                <div class="theory-inner">
+                    <div class="theory-title-block">
+                        <div class="theory-badge">Protocol 03</div>
+                        <h1 class="theory-h1">CSMA/CA <span class="dim">— Collision Avoidance</span></h1>
+                    </div>
+                    <div class="theory-cols">
+                        <div class="theory-col">
+                            <p class="theory-p">CSMA/CA is designed for wireless networks where collision detection is impractical. Instead of detecting collisions, it actively avoids them by waiting an Inter-Frame Space (IFS) and a random backoff window before transmitting.</p>
+                            <p class="theory-p">After transmission the sender awaits an <strong>ACK</strong> from the receiver. No ACK means the frame was lost (possibly via collision), triggering a retry with an incremented attempt counter K, up to K<sub>max</sub> = 15.</p>
+                        </div>
+                        <div class="theory-col">
+                            <div class="theory-facts">
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>IFS wait before transmit</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>Random backoff slots</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>ACK-based confirmation</span>
+                                </div>
+                                <div class="fact-item">
+                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                        <circle cx="9" cy="9" r="8" stroke="#eb5e28" stroke-width="1.2" />
+                                        <path d="M6 9l2 2 4-4" stroke="#eb5e28" stroke-width="1.2" stroke-linecap="round" />
+                                    </svg>
+                                    <span>IEEE 802.11 (Wi-Fi)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════
+     MAIN SIMULATOR LAYOUT
+══════════════════════════════════════════ -->
+        <main class="sim-layout">
+            <!-- ── LEFT: SIMULATION PANEL ── -->
+            <section class="sim-panel">
+                <div class="sim-panel-header">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="1" y="1" width="14" height="14" rx="2" stroke="#403d39" stroke-width="1.2" />
+                        <circle cx="5" cy="8" r="1.5" fill="#403d39" />
+                        <circle cx="8" cy="8" r="1.5" fill="#403d39" />
+                        <circle cx="11" cy="8" r="1.5" fill="#403d39" />
+                    </svg>
+                    <span>Live Simulation</span>
+                    <span class="clock-display">Tick: <span id="clock-val">0</span></span>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls-row">
+                    <div class="dest-selector">
+                        <span class="dest-label">Destination</span>
+                        <div class="pill-group">
+                            <label class="pill active-pill"><input type="radio" name="dest" value="B" checked /> B</label>
+                            <label class="pill"><input type="radio" name="dest" value="C" /> C</label>
+                            <label class="pill"><input type="radio" name="dest" value="D" /> D</label>
+                        </div>
+                    </div>
+                    <button class="btn-send" id="btn-send">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 3l5 4-5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        Send Frame from A
+                    </button>
+                    <button class="btn-playpause" id="btn-playpause" disabled aria-label="Play simulation">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3 2l9 5-9 5V2z" fill="currentColor" />
+                        </svg>
+                        Play
+                    </button>
+                    <button class="btn-step" id="btn-step" disabled>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3 2l8 5-8 5V2z" fill="currentColor" />
+                            <line x1="11" y1="2" x2="11" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        Step
+                    </button>
+                    <div class="speed-control">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <circle cx="6.5" cy="6.5" r="5.5" stroke="#403d39" stroke-width="1.1" />
+                            <path d="M6.5 3.5v3l2 1.5" stroke="#403d39" stroke-width="1.1" stroke-linecap="round" />
+                        </svg>
+                        <select id="speed-select" class="speed-select" aria-label="Simulation speed">
+                            <option value="1200">Slow</option>
+                            <option value="600" selected>Normal</option>
+                            <option value="300">Fast</option>
+                            <option value="100">Turbo</option>
+                        </select>
+                    </div>
+                    <button class="btn-reset" id="btn-reset">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2 7a5 5 0 1 1 1.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M2 11V7h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+
+                <!-- Channel visualizer -->
+                <div class="channel-area">
+                    <div class="channel-label-row">
+                        <span class="ch-label">Shared Medium</span>
+                        <span class="channel-status-badge" id="channel-badge">IDLE</span>
+                    </div>
+                    <div class="channel-track" id="channel-track">
+                        <div class="channel-line"></div>
+                        <div class="frame-particle" id="frame-particle" style="display: none"></div>
+                        <div class="jam-overlay" id="jam-overlay" style="display: none"></div>
+                    </div>
+                    <div class="node-row" id="node-row">
+                        <!-- Nodes rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Channel state info -->
+                <div class="channel-info-row">
+                    <div class="ch-info-item" id="chinfo-idle">
+                        <div class="ch-dot idle-dot"></div>
+                        <span>Idle</span>
+                    </div>
+                    <div class="ch-info-item" id="chinfo-busy">
+                        <div class="ch-dot busy-dot"></div>
+                        <span>Busy</span>
+                    </div>
+                    <div class="ch-info-item" id="chinfo-collision">
+                        <div class="ch-dot collision-dot"></div>
+                        <span>Collision</span>
+                    </div>
+                </div>
+
+                <!-- Node state legend -->
+                <div class="state-legend">
+                    <span class="legend-item"><span class="ls idle"></span>Idle</span>
+                    <span class="legend-item"><span class="ls sensing"></span>Sensing</span>
+                    <span class="legend-item"><span class="ls transmitting"></span>Transmitting</span>
+                    <span class="legend-item"><span class="ls backoff"></span>Backoff</span>
+                    <span class="legend-item"><span class="ls collision"></span>Collision</span>
+                    <span class="legend-item"><span class="ls receiving"></span>Receiving</span>
+                    <span class="legend-item"><span class="ls waiting"></span>Waiting</span>
+                </div>
+
+                <!-- Event Log -->
+                <div class="log-panel">
+                    <div class="log-header">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="#403d39" stroke-width="1.1" />
+                            <line x1="4" y1="5" x2="10" y2="5" stroke="#403d39" stroke-width="1.1" />
+                            <line x1="4" y1="7.5" x2="10" y2="7.5" stroke="#403d39" stroke-width="1.1" />
+                            <line x1="4" y1="10" x2="7" y2="10" stroke="#403d39" stroke-width="1.1" />
+                        </svg>
+                        <span>Event Log</span>
+                    </div>
+                    <div class="log-body" id="log-body"></div>
+                </div>
+            </section>
+
+            <!-- ── RIGHT: FLOWCHART PANEL ── -->
+            <section class="flow-panel">
+                <div class="flow-panel-header">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="4" y="1" width="8" height="4" rx="1" stroke="#403d39" stroke-width="1.1" />
+                        <path d="M8 5v2.5" stroke="#403d39" stroke-width="1.1" />
+                        <path d="M3 7.5h10l-5 4-5-4z" stroke="#403d39" stroke-width="1.1" stroke-linejoin="round" />
+                        <path d="M8 11.5V15" stroke="#403d39" stroke-width="1.1" />
+                        <rect x="4" y="15" width="8" height="0" rx="0" />
+                    </svg>
+                    <span>Protocol Flowchart</span>
+                </div>
+
+                <!-- CSMA Flowchart -->
+                <div class="flowchart-wrap active" id="fc-csma">
+                    <svg id="svg-csma" viewBox="0 0 260 520" xmlns="http://www.w3.org/2000/svg" class="fc-svg"></svg>
+                </div>
+
+                <!-- CSMA/CD Flowchart -->
+                <div class="flowchart-wrap" id="fc-csmacd">
+                    <svg id="svg-csmacd" viewBox="0 0 300 640" xmlns="http://www.w3.org/2000/svg" class="fc-svg"></svg>
+                </div>
+
+                <!-- CSMA/CA Flowchart -->
+                <div class="flowchart-wrap" id="fc-csmaca">
+                    <svg id="svg-csmaca" viewBox="0 0 300 680" xmlns="http://www.w3.org/2000/svg" class="fc-svg"></svg>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <span>Network Protocol Simulator · MAC Layer Protocols · CSMA / CSMA/CD / CSMA/CA</span>
+            <span>Educational Project</span>
+        </footer>
+
+        <script src="js/flowcharts.js"></script>
+        <script src="js/simulation.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>

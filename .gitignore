@@ -1,21 +1,32 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Flask stuff
-instance/
-.webassets-cache
-
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Node (if ever used locally for tooling)
+node_modules/
+npm-debug.log*
+
+# Python (Flask, if used)
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+.env
+*.egg-info/
+dist/
+build/
+
+# Misc
+.cache/

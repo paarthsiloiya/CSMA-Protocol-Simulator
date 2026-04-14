@@ -1,32 +1,69 @@
-# CSMA-Protocol-Simulator
+# NetProtoSim — Network Protocol Simulator
 
-An interactive, educational web application built to demonstrate and compare the **Carrier Sense Multiple Access (CSMA)** MAC layer protocols: CSMA, CSMA/CD, and CSMA/CA.
+An interactive, educational static web app that visualizes and simulates MAC-layer protocols: CSMA (1-persistent), CSMA/CD, and CSMA/CA.
 
-## Project Overview
-This application serves as a visual learning tool for undergraduate computer networks students. By integrating theoretical academic concepts alongside synchronized flowcharts and an interactive timeline engine, the simulator allows users to witness how connected nodes share a single communication bus, how collisions occur, and how each specific protocol version mitigates or handles those conflicts.
+## Overview
 
-## Features
-- **Three Core Protocol Modules:**
-  - **CSMA:** The basic "listen before you talk" approach.
-  - **CSMA/CD:** Collision Detection with transmission abort and jamming signals.
-  - **CSMA/CA:** Collision Avoidance utilizing Inter-Frame Spaces (IFS), contention windows, and acknowledgments.
-- **Interactive Visualization:** Watch logical nodes change states (Idle, Sensing, Transmitting, Backoff) in real time over a shared network bus.
-- **Flowchart Synchronization:** An overlay automatically tracks the exact algorithmic step matching the active simulation state on the accompanying protocol flowchart.
-- **Event Log & Metrics:** Real-time logging of sensing attempts, transmissions, collisions, successes, and a live efficiency score percentage.
-- **Full Execution Control:** Allows playing, pausing, stepping forward tick-by-tick, resetting, and fine-tuning simulation speed for detailed analysis.
-- **Lightweight Stack:** No heavy frontend frameworks or JS bundle steps—built entirely with standard HTML5, dynamic Tailwind CSS mapping, Vanilla JS, and served via a minimal Python/Flask backend.
+NetProtoSim provides a deterministic, tick-based simulation and synchronized flowchart visualization to demonstrate how CSMA-family protocols arbitrate access to a shared medium. It's designed for teaching and experimentation — step through ticks, observe state transitions, and inspect flowchart highlights and the event log.
 
-## How to Run the Project
+## Key Features
 
-1. Ensure you have **Python** installed.
-2. Clone or open the repository.
-3. Install the minimal Flask backend requirements:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Start the Flask application:
-   ```bash
-   python app.py
-   ```
-5. Open a modern web browser and navigate to: http://127.0.0.1:5000/
+- Three protocol modes: CSMA (1-persistent), CSMA/CD, CSMA/CA
+- Deterministic tick engine (manual Step or Play/Pause auto-step)
+- 4-node topology: `A` (user-controlled) and autonomous `B`, `C`, `D`
+- Live SVG flowcharts that highlight the flow for the active protocol
+- Channel visualizer with Idle / Busy / Collision and an animated frame particle
+- Binary exponential backoff and ACK behavior (protocol-dependent, K up to 15)
+- Timestamped event log and full Reset
 
+## What's in this repo
+
+Short file overview:
+
+- `index.html` — App layout, controls, and SVG containers for flowcharts
+- `css/styles.css` — Styles, variables, and component layout
+- `js/flowcharts.js` — SVG flowchart renderer and highlight API (`FC`)
+- `js/simulation.js` — Discrete simulation engine and protocol logic (`SIM`)
+- `js/main.js` — UI controller, DOM rendering, and event bindings
+
+The app is intentionally dependency-free — just static HTML/CSS/JS.
+
+## How to run locally
+
+Open `index.html` in any modern browser (no build step required).
+
+Options:
+
+- Double-click `index.html` on Windows or open it from your browser.
+- Or serve the folder with a simple static server (handy for Live Server in VS Code):
+
+```bash
+# from the project root
+# serve with Python 3 (optional)
+python -m http.server 8000
+# then visit http://localhost:8000/
+```
+
+## Quick usage notes
+
+- Use the top tabs to switch protocols; the corresponding flowchart and theory panel update.
+- Click `Send Frame from A` to make node `A` transmit (choose destination with the Destination pills).
+- `Play` toggles auto-stepping; `Step` advances one tick while paused.
+- `Reset` clears the simulation and flowchart highlights.
+- Watch the Event Log for timestamped actions and the channel badge for current channel state.
+
+## Development notes
+
+- The simulation is deterministic per tick, with autonomous nodes B/C/D scheduled via `SIM.scheduleAutoTx()`.
+- Flowchart nodes have stable IDs mapped in `SIM.FC_MAP` and are highlighted via `FC.highlight(...)`.
+- Node state and UI are synced from `SIM` by `main.js`'s `renderAll()`.
+
+## License & Deployment
+
+License: MIT — see the [LICENSE](LICENSE) file.
+
+### GitHub Pages (published)
+
+The project is published at:
+
+https://paarthsiloiya.github.io/CSMA-Protocol-Simulator/
