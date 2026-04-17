@@ -279,7 +279,7 @@ const FC = {
       [30, 457],
       [cx - 40, 457]
     ], 'NO');
-    FC.process(svg, 'csmacd-backoff', cx - 40, 457, 0, 0, ''); // placeholder, actual below
+    FC.process(svg, 'csmacd-backoff-placeholder', cx - 40, 457, 0, 0, ''); // placeholder, actual below
     // Replace with proper backoff box
     FC.process(svg, 'csmacd-backoff', 60, 457, 80, 22, 'Backoff');
 
@@ -391,8 +391,12 @@ const FC = {
       if (node) {
         node.classList.remove('visited');
         node.classList.add('active');
-        // Scroll into view if needed
-        node.scrollIntoViewIfNeeded && node.scrollIntoViewIfNeeded(false);
+        // Scroll into view safely for SVG elements
+        if (typeof node.scrollIntoViewIfNeeded === 'function') {
+          try { node.scrollIntoViewIfNeeded(false); } catch(e) {}
+        } else if (typeof node.scrollIntoView === 'function') {
+          try { node.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {}
+        }
       }
     }
   },

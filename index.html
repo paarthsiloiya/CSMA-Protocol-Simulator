@@ -206,51 +206,83 @@
                 </div>
 
                 <!-- Controls -->
-                <div class="controls-row">
-                    <div class="dest-selector">
-                        <span class="dest-label">Destination</span>
-                        <div class="pill-group">
-                            <label class="pill active-pill"><input type="radio" name="dest" value="B" checked /> B</label>
-                            <label class="pill"><input type="radio" name="dest" value="C" /> C</label>
-                            <label class="pill"><input type="radio" name="dest" value="D" /> D</label>
+                <div class="controls-grid">
+                    <div class="controls-card nodea-controls">
+                        <div class="controls-card-header">Node A Controls</div>
+                        <div class="controls-row">
+                            <div class="dest-selector">
+                                <span class="dest-label">Destination</span>
+                                <div class="pill-group">
+                                    <label class="pill active-pill"><input type="radio" name="dest" value="B" checked /> B</label>
+                                    <label class="pill"><input type="radio" name="dest" value="C" /> C</label>
+                                    <label class="pill"><input type="radio" name="dest" value="D" /> D</label>
+                                </div>
+                            </div>
+                            <button class="btn-send" id="btn-send">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 3l5 4-5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                Send Frame from A
+                            </button>
                         </div>
                     </div>
-                    <button class="btn-send" id="btn-send">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 3l5 4-5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        Send Frame from A
-                    </button>
-                    <button class="btn-playpause" id="btn-playpause" disabled aria-label="Play simulation">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M3 2l9 5-9 5V2z" fill="currentColor" />
-                        </svg>
-                        Play
-                    </button>
-                    <button class="btn-step" id="btn-step" disabled>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M3 2l8 5-8 5V2z" fill="currentColor" />
-                            <line x1="11" y1="2" x2="11" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                        </svg>
-                        Step
-                    </button>
-                    <div class="speed-control">
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                            <circle cx="6.5" cy="6.5" r="5.5" stroke="#403d39" stroke-width="1.1" />
-                            <path d="M6.5 3.5v3l2 1.5" stroke="#403d39" stroke-width="1.1" stroke-linecap="round" />
-                        </svg>
-                        <select id="speed-select" class="speed-select" aria-label="Simulation speed">
-                            <option value="1200">Slow</option>
-                            <option value="600" selected>Normal</option>
-                            <option value="300">Fast</option>
-                            <option value="100">Turbo</option>
-                        </select>
+                    <div class="controls-card simulation-controls">
+                        <div class="controls-card-header">Simulation Controls</div>
+                        <div class="controls-row">
+                            <button class="btn-playpause" id="btn-playpause" disabled aria-label="Play simulation">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M3 2l9 5-9 5V2z" fill="currentColor" />
+                                </svg>
+                                Play
+                            </button>
+                            <button class="btn-step" id="btn-step" disabled>
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M3 2l8 5-8 5V2z" fill="currentColor" />
+                                    <line x1="11" y1="2" x2="11" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                </svg>
+                                Step
+                            </button>
+                            <div class="speed-control enhanced-select">
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                    <circle cx="6.5" cy="6.5" r="5.5" stroke="#403d39" stroke-width="1.1" />
+                                    <path d="M6.5 3.5v3l2 1.5" stroke="#403d39" stroke-width="1.1" stroke-linecap="round" />
+                                </svg>
+                                <span class="select-prefix">Speed</span>
+                                <div class="select-shell">
+                                    <select id="speed-select" class="speed-select" aria-label="Simulation speed">
+                                        <option value="1200">Slow</option>
+                                        <option value="600" selected>Normal</option>
+                                        <option value="300">Fast</option>
+                                        <option value="100">Turbo</option>
+                                    </select>
+                                    <svg class="select-caret" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                                        <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="speed-control enhanced-select">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#403d39" stroke-width="2" stroke-linejoin="round" />
+                                </svg>
+                                <span class="select-prefix">Rate</span>
+                                <div class="select-shell">
+                                    <select id="rate-select" class="speed-select" aria-label="Auto Tx Rate">
+                                        <option value="low">Low Rate</option>
+                                        <option value="normal" selected>Normal Rate</option>
+                                        <option value="high">High Rate</option>
+                                    </select>
+                                    <svg class="select-caret" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                                        <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <button class="btn-reset" id="btn-reset">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M2 7a5 5 0 1 1 1.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                    <path d="M2 11V7h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                Reset
+                            </button>
+                        </div>
                     </div>
-                    <button class="btn-reset" id="btn-reset">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M2 7a5 5 0 1 1 1.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                            <path d="M2 11V7h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        Reset
-                    </button>
                 </div>
 
                 <!-- Channel visualizer -->

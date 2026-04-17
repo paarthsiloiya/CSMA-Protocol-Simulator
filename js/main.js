@@ -134,15 +134,17 @@
       const srcIdx = NODE_IDS.indexOf(txNodeId);
       const destIdx = NODE_IDS.indexOf(destId);
       
-      if (destIdx < srcIdx) {
+      if (destIdx === -1) {
+          particle.textContent = `${txNodeId} \u2192 ?`;
+      } else if (destIdx < srcIdx) {
           particle.textContent = `${destId} \u2190 ${txNodeId}`;
       } else {
           particle.textContent = `${txNodeId} \u2192 ${destId}`;
       }
       
       // Calculate normalized positions (0, 0.333, 0.666, 1)
-      const srcPos = srcIdx / 3;
-      const destPos = destIdx !== -1 ? destIdx / 3 : srcPos;
+      const srcPos = srcIdx !== -1 ? srcIdx / 3 : 0;
+      const destPos = destIdx !== -1 ? destIdx / 3 : (srcPos === 0 ? 1 : 0);
       
       // Interpolate current position based on progress
       const currentPos = srcPos + (destPos - srcPos) * maxProgress;
@@ -290,6 +292,11 @@
     // Speed control
     document.getElementById('speed-select').addEventListener('change', function () {
       applySpeed(Number(this.value));
+    });
+
+    // Rate control
+    document.getElementById('rate-select').addEventListener('change', function () {
+      SIM.autoTxRateMode = this.value;
     });
   }
 

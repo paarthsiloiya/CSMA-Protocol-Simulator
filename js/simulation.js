@@ -66,6 +66,8 @@ const SIM = {
 
   pendingAutoTx: [],   // auto-tx schedule: [{nodeId, tick}]
   autoScheduled: false,
+  autoTxRateMode: 'normal',
+  fcResetTimeout: null,
 
   // ── Init ──────────────────────────────────────
   init(protocol) {
@@ -76,6 +78,11 @@ const SIM = {
     SIM.channelOwners = new Set();
     SIM.pendingAutoTx = [];
     SIM.autoScheduled = false;
+
+    if (SIM.fcResetTimeout) {
+      clearTimeout(SIM.fcResetTimeout);
+      SIM.fcResetTimeout = null;
+    }
 
     SIM.nodes = {
       A: { state: 'idle', dest: 'B', K: 0, backoffTimer: 0, txProgress: 0, isSrc: false, pendingTx: false },
@@ -117,12 +124,15 @@ const SIM = {
       SIM.setChannel('collision');
     }
     SIM.setState(nodeId, 'transmitting');
+    SIM.nodes[nodeId].wasCorrupted = false; // reset corruption flag
   },
 
   endTx(nodeId) {
     SIM.channelOwners.delete(nodeId);
-    if (SIM.channelOwners.size === 0) SIM.setChannel('idle');
-    else if (SIM.channelOwners.size === 1) SIM.setChannel('busy');
+    if (SIM.channelOwners.size === 0) {
+      SIM.setChannel('idle');
+    }
+    // If size > 0 we leave channel as 'collision' or 'busy'
   },
 
   // ── Random backoff ────────────────────────────
@@ -144,26 +154,32 @@ const SIM = {
 
   // ── Process auto-tx triggers ──────────────────
   processAutoTx() {
-    SIM.pendingAutoTx.forEach(entry => {
-      const n = SIM.nodes[entry.nodeId];
-      if (entry.tick === SIM.clock && n.state === 'idle') {
-        n.pendingTx = true;
-        if (entry.nodeId === 'A') {
-          // Dest already set by triggerA; keep it or pick B as fallback
-          if (!n.dest) n.dest = 'B';
-          n.isSrc = true;
-          n.K = 0;
+    SIM.pendingAutoTx = SIM.pendingAutoTx.filter(entry => {
+      if (entry.tick <= SIM.clock) {
+        const n = SIM.nodes[entry.nodeId];
+        if (n.state === 'idle') {
+          n.pendingTx = true;
+          if (entry.nodeId === 'A') {
+            if (!n.dest) n.dest = 'B';
+            n.isSrc = true;
+            n.K = 0;
+            n.wasCorrupted = false;
+          } else {
+            const others = ['A', 'B', 'C', 'D'].filter(x => x !== entry.nodeId);
+            n.dest = others[Math.floor(Math.random() * others.length)];
+            n.K = 0;
+            n.isSrc = true;
+            n.wasCorrupted = false;
+          }
+          SIM.log(SIM.clock, `Node ${entry.nodeId} wants to transmit`, '');
+          SIM.setState(entry.nodeId, 'sensing');
+          return false; // Handled
         } else {
-          const others = ['A', 'B', 'C', 'D'].filter(x => x !== entry.nodeId);
-          n.dest = others[Math.floor(Math.random() * others.length)];
-          n.K = 0;
-          n.isSrc = true;
+          return true; // Node busy, retry next tick
         }
-        SIM.log(SIM.clock, `Node ${entry.nodeId} wants to transmit`, '');
-        SIM.setState(entry.nodeId, 'sensing');
       }
+      return true; // Future
     });
-    SIM.pendingAutoTx = SIM.pendingAutoTx.filter(e => e.tick > SIM.clock);
   },
 
   // ── Trigger A to send ─────────────────────────
@@ -191,6 +207,17 @@ const SIM = {
   fcHighlight(step) {
     const map = SIM.FC_MAP[SIM.protocol];
     if (map && map[step]) FC.highlight(map[step]);
+
+    if (SIM.fcResetTimeout) {
+      clearTimeout(SIM.fcResetTimeout);
+      SIM.fcResetTimeout = null;
+    }
+
+    if (step === 'success' || step === 'abort') {
+      SIM.fcResetTimeout = setTimeout(() => {
+        FC.resetHighlights();
+      }, 1000);
+    }
   },
 
   // ══════════════════════════════════════════════
@@ -213,9 +240,25 @@ const SIM = {
     SIM.updateAutoNodes();
   },
 
+  getAutoTxRate() {
+    if (SIM.autoTxRateMode === 'low') return { base: 25, rand: 40 };
+    if (SIM.autoTxRateMode === 'high') return { base: 5, rand: 10 };
+    // normal
+    return { base: 12, rand: 15 };
+  },
+
   // ── Auto-node behavior (simplified for all protocols) ──
   updateAutoNodes() {
-    if (SIM.nodes.A.state === 'receiving') SIM.setState('A', 'idle');
+    if (SIM.nodes.A.state === 'receiving') {
+      SIM.nodes.A.rxTimer--;
+      if (SIM.nodes.A.rxTimer <= 0) {
+        if (SIM.nodes.A.pendingTx) {
+          SIM.setState('A', 'sensing');
+        } else {
+          SIM.setState('A', 'idle');
+        }
+      }
+    }
     ['B', 'C', 'D'].forEach(id => {
       const n = SIM.nodes[id];
       if (n.state === 'sensing') {
@@ -230,15 +273,29 @@ const SIM = {
         }
       } else if (n.state === 'transmitting') {
         n.txProgress--;
-        if (n.txProgress <= 0) {
+        if (SIM.channel === 'collision') n.wasCorrupted = true;
+        
+        if (SIM.protocol === 'csmacd' && SIM.channel === 'collision') {
+            SIM.endTx(id);
+            SIM.setState(id, 'collision');
+            SIM.log(SIM.clock, `Node ${id} collision!`, 'collision');
+            n.txProgress = 0;
+        } else if (n.txProgress <= 0) {
+          if (SIM.channelOwners.size > 1) n.wasCorrupted = true;
+          const collided = n.wasCorrupted || (SIM.channel === 'collision' && SIM.protocol === 'csma');
           SIM.endTx(id);
-          if (SIM.channel !== 'collision') {
+          
+          if (!collided) {
             SIM.setState(id, 'idle');
             n.pendingTx = false;
             SIM.log(SIM.clock, `Node ${id} finished transmitting`, 'success');
-            if (SIM.nodes[n.dest]) SIM.setState(n.dest, 'receiving');
+            if (SIM.nodes[n.dest] && SIM.nodes[n.dest].state !== 'receiving') {
+              SIM.setState(n.dest, 'receiving');
+              SIM.nodes[n.dest].rxTimer = 3;
+            }
             // Schedule the node again to run indefinitely
-            SIM.pendingAutoTx.push({ nodeId: id, tick: SIM.clock + 15 + Math.floor(Math.random() * 25) });
+            const rate = SIM.getAutoTxRate();
+            SIM.pendingAutoTx.push({ nodeId: id, tick: SIM.clock + rate.base + Math.floor(Math.random() * rate.rand) });
           } else {
             SIM.setState(id, 'collision');
             SIM.log(SIM.clock, `Node ${id} collision!`, 'collision');
@@ -252,7 +309,8 @@ const SIM = {
             n.K = 0;
             SIM.log(SIM.clock, `Node ${id} ABORT`, 'abort');
             // Schedule the node again to run indefinitely
-            SIM.pendingAutoTx.push({ nodeId: id, tick: SIM.clock + 15 + Math.floor(Math.random() * 25) });
+            const rate = SIM.getAutoTxRate();
+            SIM.pendingAutoTx.push({ nodeId: id, tick: SIM.clock + rate.base + Math.floor(Math.random() * rate.rand) });
         } else {
             n.backoffTimer = SIM.randomBackoff(n.K);
             SIM.setState(id, 'backoff');
@@ -263,7 +321,14 @@ const SIM = {
           SIM.setState(id, 'sensing');
         }
       } else if (n.state === 'receiving') {
-        SIM.setState(id, 'idle');
+        n.rxTimer--;
+        if (n.rxTimer <= 0) {
+          if (n.pendingTx) {
+            SIM.setState(id, 'sensing');
+          } else {
+            SIM.setState(id, 'idle');
+          }
+        }
       }
     });
   },
@@ -282,6 +347,7 @@ const SIM = {
         SIM.startTx('A');
         a.txLen = 4;
         a.txProgress = 4;
+        a.wasCorrupted = false;
         SIM.fcHighlight('transmit');
       } else {
         SIM.log(SIM.clock, 'A: channel busy → keep sensing', '');
@@ -292,20 +358,15 @@ const SIM = {
     if (a.state === 'transmitting') {
       a.txProgress--;
       SIM.fcHighlight('transmit');
+      if (SIM.channel === 'collision') a.wasCorrupted = true;
       if (a.txProgress <= 0) {
+        if (SIM.channelOwners.size > 1) a.wasCorrupted = true;
         SIM.endTx('A');
         SIM.fcHighlight('col_check');
-        if (SIM.channelOwners.size > 0 || SIM.channel === 'collision') {
+        if (a.wasCorrupted || SIM.channel === 'collision') {
           // collision
           SIM.setState('A', 'collision');
           SIM.log(SIM.clock, 'A: COLLISION detected → retry', 'collision');
-          SIM.endTx('A');
-          SIM.setChannel('idle');
-          SIM.channelOwners.clear();
-          setTimeout(() => {
-            SIM.setState('A', 'sensing');
-            a.K++;
-          }, 0);
         } else {
           SIM.setState('A', 'idle');
           a.isSrc = false;
@@ -313,9 +374,10 @@ const SIM = {
           SIM.fcHighlight('success');
           SIM.log(SIM.clock, `A → ${a.dest}: SUCCESS`, 'success');
           // Mark destination as receiving
-          if (SIM.nodes[a.dest]) SIM.setState(a.dest, 'receiving');
-          // Reschedule A for another round after a short gap
-          // SIM.pendingAutoTx.push({ nodeId: 'A', tick: SIM.clock + 6 }); // Removed node A auto resume
+          if (SIM.nodes[a.dest] && SIM.nodes[a.dest].state !== 'receiving') {
+             SIM.setState(a.dest, 'receiving');
+             SIM.nodes[a.dest].rxTimer = 3;
+          }
         }
       }
       return;
@@ -373,8 +435,10 @@ const SIM = {
         a.pendingTx = false;
         SIM.fcHighlight('success');
         SIM.log(SIM.clock, `A → ${a.dest}: SUCCESS (no collision)`, 'success');
-        if (SIM.nodes[a.dest]) SIM.setState(a.dest, 'receiving');
-        // SIM.pendingAutoTx.push({ nodeId: 'A', tick: SIM.clock + 6 });
+        if (SIM.nodes[a.dest] && SIM.nodes[a.dest].state !== 'receiving') {
+          SIM.setState(a.dest, 'receiving');
+          SIM.nodes[a.dest].rxTimer = 3;
+        }
       }
       return;
     }
@@ -385,18 +449,13 @@ const SIM = {
       SIM.fcHighlight('kinc');
       SIM.fcHighlight('kmax_check');
 
-      // Clear channel
-      SIM.channelOwners.clear();
-      SIM.setChannel('idle');
-
       if (a.K > 15) {
         SIM.setState('A', 'idle');
         a.K = 0;
         a.isSrc = false;
         a.pendingTx = false;
         SIM.fcHighlight('abort');
-        SIM.log(SIM.clock, `A: K=${a.K} > K_max → ABORT`, 'abort');
-        // SIM.pendingAutoTx.push({ nodeId: 'A', tick: SIM.clock + 8 });
+        SIM.log(SIM.clock, `A: K=${a.K} >= K_max → ABORT`, 'abort');
         return;
       }
 
@@ -441,7 +500,7 @@ const SIM = {
       return;
     }
 
-    if (a.state === 'waiting') {
+    if (a.state === 'waiting' && a.ackTimer === undefined) {
       if (!a.ifsTimer) a.ifsTimer = 2;
       a.ifsTimer--;
       SIM.fcHighlight('ifs');
@@ -476,6 +535,7 @@ const SIM = {
         SIM.startTx('A');
         a.txLen = 4;
         a.txProgress = 4;
+        a.wasCorrupted = false;
         SIM.setState('A', 'transmitting');
         SIM.fcHighlight('send');
       } else {
@@ -487,7 +547,9 @@ const SIM = {
     if (a.state === 'transmitting') {
       a.txProgress--;
       SIM.fcHighlight('send');
+      if (SIM.channel === 'collision') a.wasCorrupted = true;
       if (a.txProgress <= 0) {
+        if (SIM.channelOwners.size > 1) a.wasCorrupted = true;
         SIM.endTx('A');
         SIM.setState('A', 'waiting');
         a.ackTimer = 3;
@@ -497,7 +559,7 @@ const SIM = {
       return;
     }
 
-    // waiting for ACK (re-using waiting state with ackTimer)
+    // waiting for ACK
     if (a.state === 'waiting' && a.ackTimer !== undefined) {
       a.ackTimer--;
       SIM.fcHighlight('wait_ack');
@@ -505,16 +567,18 @@ const SIM = {
 
       if (a.ackTimer <= 0) {
         // Determine ACK outcome
-        const collisionOccurred = SIM.channel === 'collision' || (a.K > 0 && Math.random() < 0.25);
+        const collisionOccurred = a.wasCorrupted || (a.K > 0 && Math.random() < 0.25);
         if (!collisionOccurred) {
           SIM.setState('A', 'idle');
           a.isSrc = false;
           a.pendingTx = false;
           SIM.fcHighlight('success');
           SIM.log(SIM.clock, `A → ${a.dest}: ACK received → SUCCESS`, 'success');
-          if (SIM.nodes[a.dest]) SIM.setState(a.dest, 'receiving');
+          if (SIM.nodes[a.dest] && SIM.nodes[a.dest].state !== 'receiving') {
+             SIM.setState(a.dest, 'receiving');
+             SIM.nodes[a.dest].rxTimer = 3;
+          }
           delete a.ackTimer;
-          // SIM.pendingAutoTx.push({ nodeId: 'A', tick: SIM.clock + 6 });
         } else {
           // No ACK
           a.K++;
@@ -528,8 +592,7 @@ const SIM = {
             a.isSrc = false;
             a.pendingTx = false;
             SIM.fcHighlight('abort');
-            SIM.log(SIM.clock, `A: K=${a.K} > 15 → ABORT`, 'abort');
-            // SIM.pendingAutoTx.push({ nodeId: 'A', tick: SIM.clock + 8 });
+            SIM.log(SIM.clock, `A: K=${a.K} >= 16 → ABORT`, 'abort');
             return;
           }
 
